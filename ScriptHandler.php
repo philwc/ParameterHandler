@@ -47,13 +47,15 @@ class ScriptHandler
 
         $exists = is_file($realFile);
 
-        $yamlParser = new Parser();
+        //$yamlParser = new Parser();
+
 
         $action = $exists ? 'Updating' : 'Creating';
         $io->write(sprintf('<info>%s the "%s" file</info>', $action, $realFile));
 
         // Find the expected params
-        $expectedValues = $yamlParser->parse(file_get_contents($config['dist-file']));
+        $expectedValues = parse_ini_file($config['dist-file'], true);
+
         if (!isset($expectedValues[$parameterKey])) {
             throw new \InvalidArgumentException('The dist file seems invalid.');
         }
@@ -62,7 +64,7 @@ class ScriptHandler
         // find the actual params
         $actualValues = array($parameterKey => array());
         if ($exists) {
-            $existingValues = $yamlParser->parse(file_get_contents($realFile));
+            $existingValues = parse_ini_file($config['dist-file'], true);
             if (!is_array($existingValues)) {
                 throw new \InvalidArgumentException(sprintf('The existing "%s" file does not contain an array',
                     $realFile));
