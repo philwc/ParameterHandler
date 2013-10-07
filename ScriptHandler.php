@@ -70,8 +70,10 @@ class ScriptHandler
             $actualValues = array_merge($actualValues, $existingValues);
         }
 
-        $actualValues[$parameterKey] = self::processParams($config, $io, $expectedParams,
-                (array) $actualValues[$parameterKey]);
+        $actualValues[$parameterKey] =
+            self::processParams(
+                $config, $io, $expectedParams, (array) $actualValues[$parameterKey],
+                dirname(realpath($realFile)));
 
         // Preserve other top-level keys than `$parameterKey` in the file
         foreach ($expectedValues as $key => $setting) {
@@ -110,7 +112,8 @@ class ScriptHandler
         return $config;
     }
 
-    private static function processParams(array $config, IOInterface $io, $expectedParams, $actualParams)
+    private static function processParams(array $config, IOInterface $io, $expectedParams, $actualParams,
+                                          $docRoot = '')
     {
         // Grab values for parameters that were renamed
         $renameMap    = empty($config['rename-map']) ? array() : (array) $config['rename-map'];
@@ -135,7 +138,7 @@ class ScriptHandler
         // Add the params coming from the environment values
         $actualParams = array_replace($actualParams, self::getEnvValues($envMap));
 
-        return self::getParams($io, $expectedParams, $actualParams);
+        return self::getParams($io, $expectedParams, $actualParams, $docRoot);
     }
 
     private static function getEnvValues(array $envMap)
@@ -168,7 +171,8 @@ class ScriptHandler
         return $actualParams;
     }
 
-    private static function getParams(IOInterface $io, array $expectedParams, array $actualParams)
+    private static function getParams(IOInterface $io, array $expectedParams, array $actualParams,
+                                      $docRoot = '')
     {
         // Simply use the expectedParams value as default for the missing params.
         if (!$io->isInteractive()) {
@@ -188,8 +192,14 @@ class ScriptHandler
                 }
 
                 $default = Inline::dump($message);
-                $value   = $io->ask(sprintf('<question>%s</question> (<comment>%s</comment>):', $key, $default),
-                    $default);
+
+                if (strpos($default, '[[DOCROOT]]') !== false) {
+                    $default = str_replace('[[DOCROOT]]', $docRoot, $default);
+                }
+
+                $value = $io
+                    ->ask(sprintf('<question>%s / %s</question> (<comment>%s</comment>):', $sectionName, $key,
+                        $default), $default);
 
                 $actualParams[$sectionName][$key] = Inline::parse($value);
             }
