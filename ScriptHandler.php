@@ -47,15 +47,13 @@ class ScriptHandler
 
         $exists = is_file($realFile);
 
-        //$yamlParser = new Parser();
-
+        $yamlParser = new Parser();
 
         $action = $exists ? 'Updating' : 'Creating';
         $io->write(sprintf('<info>%s the "%s" file</info>', $action, $realFile));
 
         // Find the expected params
-        $expectedValues = parse_ini_file($config['dist-file'], true);
-
+        $expectedValues = $yamlParser->parse(file_get_contents($config['dist-file']));
         if (!isset($expectedValues[$parameterKey])) {
             throw new \InvalidArgumentException('The dist file seems invalid.');
         }
@@ -64,7 +62,7 @@ class ScriptHandler
         // find the actual params
         $actualValues = array($parameterKey => array());
         if ($exists) {
-            $existingValues = parse_ini_file($config['dist-file'], true);
+            $existingValues = $yamlParser->parse(file_get_contents($realFile));
             if (!is_array($existingValues)) {
                 throw new \InvalidArgumentException(sprintf('The existing "%s" file does not contain an array',
                     $realFile));
@@ -178,22 +176,23 @@ class ScriptHandler
         }
 
         $isStarted = false;
+        foreach ($expectedParams as $sectionName => $sectionValues) {
+            foreach ($sectionValues as $key => $message) {
+                if (array_key_exists($key, $actualParams)) {
+                    continue;
+                }
 
-        foreach ($expectedParams as $key => $message) {
-            if (array_key_exists($key, $actualParams)) {
-                continue;
+                if (!$isStarted) {
+                    $isStarted = true;
+                    $io->write('<comment>Some parameters are missing. Please provide them.</comment>');
+                }
+
+                $default = Inline::dump($message);
+                $value   = $io->ask(sprintf('<question>%s</question> (<comment>%s</comment>):', $key, $default),
+                    $default);
+
+                $actualParams[$sectionName][$key] = Inline::parse($value);
             }
-
-            if (!$isStarted) {
-                $isStarted = true;
-                $io->write('<comment>Some parameters are missing. Please provide them.</comment>');
-            }
-
-            $default = Inline::dump($message);
-            $value   = $io->ask(sprintf('<question>%s</question> (<comment>%s</comment>): ', $key, $default),
-                $default);
-
-            $actualParams[$key] = Inline::parse($value);
         }
 
         return $actualParams;
