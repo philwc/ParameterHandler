@@ -178,7 +178,7 @@ class ScriptHandler
         $isStarted = false;
         foreach ($expectedParams as $sectionName => $sectionValues) {
             foreach ($sectionValues as $key => $message) {
-                if (array_key_exists($key, $actualParams)) {
+                if (isset($actualParams[$sectionName]) && array_key_exists($key, $actualParams[$sectionName])) {
                     continue;
                 }
 
