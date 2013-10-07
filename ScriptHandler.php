@@ -73,7 +73,7 @@ class ScriptHandler
         $actualValues[$parameterKey] =
             self::processParams(
                 $config, $io, $expectedParams, (array) $actualValues[$parameterKey],
-                dirname(realpath($realFile)));
+                dirname(realpath($config['dist-file'])));
 
         // Preserve other top-level keys than `$parameterKey` in the file
         foreach ($expectedValues as $key => $setting) {
