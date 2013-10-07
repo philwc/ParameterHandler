@@ -1,8 +1,8 @@
 {
-    "name": "incenteev/composer-parameter-handler",
+    "name": "philwc/composer-parameter-handler",
     "description": "Composer script handling your ignored parameter file",
     "keywords": ["parameters management"],
-    "homepage": "https://github.com/Incenteev/ParameterHandler",
+    "homepage": "https://github.com/philwc/ParameterHandler",
     "license": "MIT",
     "authors": [
         {
@@ -20,9 +20,9 @@
         "symfony/filesystem": "~2.2"
     },
     "autoload": {
-        "psr-0": { "Incenteev\\ParameterHandler": "" }
+        "psr-0": { "philwc\\ParameterHandler": "" }
     },
-    "target-dir": "Incenteev/ParameterHandler",
+    "target-dir": "philwc/ParameterHandler",
     "extra": {
         "branch-alias": {
             "dev-master": "2.1.x-dev"

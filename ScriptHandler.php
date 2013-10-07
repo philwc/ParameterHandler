@@ -1,6 +1,6 @@
 <?php
 
-namespace Incenteev\ParameterHandler;
+namespace philwc\ParameterHandler;
 
 use Composer\IO\IOInterface;
 use Composer\Script\Event;
@@ -10,6 +10,7 @@ use Symfony\Component\Yaml\Yaml;
 
 class ScriptHandler
 {
+
     public static function buildParameters(Event $event)
     {
         $extras = $event->getComposer()->getPackage()->getExtra();
@@ -41,7 +42,7 @@ class ScriptHandler
     {
         $config = self::processConfig($config);
 
-        $realFile = $config['file'];
+        $realFile     = $config['file'];
         $parameterKey = $config['parameter-key'];
 
         $exists = is_file($realFile);
@@ -63,12 +64,14 @@ class ScriptHandler
         if ($exists) {
             $existingValues = $yamlParser->parse(file_get_contents($realFile));
             if (!is_array($existingValues)) {
-                throw new \InvalidArgumentException(sprintf('The existing "%s" file does not contain an array', $realFile));
+                throw new \InvalidArgumentException(sprintf('The existing "%s" file does not contain an array',
+                    $realFile));
             }
             $actualValues = array_merge($actualValues, $existingValues);
         }
 
-        $actualValues[$parameterKey] = self::processParams($config, $io, $expectedParams, (array) $actualValues[$parameterKey]);
+        $actualValues[$parameterKey] = self::processParams($config, $io, $expectedParams,
+                (array) $actualValues[$parameterKey]);
 
         // Preserve other top-level keys than `$parameterKey` in the file
         foreach ($expectedValues as $key => $setting) {
@@ -81,7 +84,8 @@ class ScriptHandler
             mkdir($dir, 0755, true);
         }
 
-        file_put_contents($realFile, "# This file is auto-generated during the composer install\n" . Yaml::dump($actualValues, 99));
+        file_put_contents($realFile,
+            "# This file is auto-generated during the composer install\n" . Yaml::dump($actualValues, 99));
     }
 
     private static function processConfig(array $config)
@@ -91,11 +95,12 @@ class ScriptHandler
         }
 
         if (empty($config['dist-file'])) {
-            $config['dist-file'] = $config['file'].'.dist';
+            $config['dist-file'] = $config['file'] . '.dist';
         }
 
         if (!is_file($config['dist-file'])) {
-            throw new \InvalidArgumentException(sprintf('The dist file "%s" does not exist. Check your dist-file config or create it.', $config['dist-file']));
+            throw new \InvalidArgumentException(sprintf('The dist file "%s" does not exist. Check your dist-file config or create it.',
+                $config['dist-file']));
         }
 
         if (empty($config['parameter-key'])) {
@@ -108,7 +113,7 @@ class ScriptHandler
     private static function processParams(array $config, IOInterface $io, $expectedParams, $actualParams)
     {
         // Grab values for parameters that were renamed
-        $renameMap = empty($config['rename-map']) ? array() : (array) $config['rename-map'];
+        $renameMap    = empty($config['rename-map']) ? array() : (array) $config['rename-map'];
         $actualParams = array_replace($actualParams, self::processRenamedValues($renameMap, $actualParams));
 
         $keepOutdatedParams = false;
@@ -183,11 +188,13 @@ class ScriptHandler
             }
 
             $default = Inline::dump($message);
-            $value = $io->ask(sprintf('<question>%s</question> (<comment>%s</comment>): ', $key, $default), $default);
+            $value   = $io->ask(sprintf('<question>%s</question> (<comment>%s</comment>): ', $key, $default),
+                $default);
 
             $actualParams[$key] = Inline::parse($value);
         }
 
         return $actualParams;
     }
+
 }
