@@ -174,7 +174,7 @@ class ScriptHandler
     private static function getParams(IOInterface $io, array $expectedParams, array $actualParams,
                                       $docRoot = '')
     {
-        array_walk_recursive($myArray, function(&$value, $key, $docRoot){
+        array_walk_recursive($expectedParams, function(&$value, $key, $docRoot){
             if (strpos($value, '[[DOCROOT]]') !== false) {
                 $value = str_replace('[[DOCROOT]]', $docRoot, $value);
             }
