@@ -11,11 +11,9 @@ use Symfony\Component\Yaml\Yaml;
 class ScriptHandler
 {
 
-    public static function buildParameters( Event $event )
+    public static function buildParameters(Event $event)
     {
-        $extras = $event->getComposer()
-                        ->getPackage()
-                        ->getExtra();
+        $extras = $event->getComposer()->getPackage()->getExtra();
 
         if (!isset($extras['incenteev-parameters'])) {
             throw new \InvalidArgumentException('The parameter handler needs to be configured through the extra.incenteev-parameters setting.');
@@ -40,7 +38,7 @@ class ScriptHandler
         }
     }
 
-    private static function processFile( array $config, IOInterface $io )
+    private static function processFile(array $config, IOInterface $io)
     {
         $config = self::processConfig($config);
 
@@ -66,21 +64,16 @@ class ScriptHandler
         if ($exists) {
             $existingValues = $yamlParser->parse(file_get_contents($realFile));
             if (!is_array($existingValues)) {
-                throw new \InvalidArgumentException(sprintf(
-                    'The existing "%s" file does not contain an array',
-                    $realFile
-                ));
+                throw new \InvalidArgumentException(sprintf('The existing "%s" file does not contain an array',
+                    $realFile));
             }
             $actualValues = array_merge($actualValues, $existingValues);
         }
 
-        $actualValues[$parameterKey] = self::processParams(
-                                           $config,
-                                               $io,
-                                               $expectedParams,
-                                               (array) $actualValues[$parameterKey],
-                                               dirname(realpath($config['dist-file']))
-        );
+        $actualValues[$parameterKey] =
+            self::processParams(
+                $config, $io, $expectedParams, (array) $actualValues[$parameterKey],
+                dirname(realpath($config['dist-file'])));
 
         // Preserve other top-level keys than `$parameterKey` in the file
         foreach ($expectedValues as $key => $setting) {
@@ -93,13 +86,11 @@ class ScriptHandler
             mkdir($dir, 0755, true);
         }
 
-        file_put_contents(
-            $realFile,
-            "# This file is auto-generated during the composer install\n" . Yaml::dump($actualValues, 99)
-        );
+        file_put_contents($realFile,
+            "# This file is auto-generated during the composer install\n" . Yaml::dump($actualValues, 99));
     }
 
-    private static function processConfig( array $config )
+    private static function processConfig(array $config)
     {
         if (empty($config['file'])) {
             throw new \InvalidArgumentException('The extra.incenteev-parameters.file setting is required to use this script handler.');
@@ -110,10 +101,8 @@ class ScriptHandler
         }
 
         if (!is_file($config['dist-file'])) {
-            throw new \InvalidArgumentException(sprintf(
-                'The dist file "%s" does not exist. Check your dist-file config or create it.',
-                $config['dist-file']
-            ));
+            throw new \InvalidArgumentException(sprintf('The dist file "%s" does not exist. Check your dist-file config or create it.',
+                $config['dist-file']));
         }
 
         if (empty($config['parameter-key'])) {
@@ -123,13 +112,9 @@ class ScriptHandler
         return $config;
     }
 
-    private static function processParams(
-        array $config,
-        IOInterface $io,
-        $expectedParams,
-        $actualParams,
-        $docRoot = ''
-    ) {
+    private static function processParams(array $config, IOInterface $io, $expectedParams, $actualParams,
+                                          $docRoot = '')
+    {
         // Grab values for parameters that were renamed
         $renameMap    = empty($config['rename-map']) ? array() : (array) $config['rename-map'];
         $actualParams = array_replace($actualParams, self::processRenamedValues($renameMap, $actualParams));
@@ -156,7 +141,7 @@ class ScriptHandler
         return self::getParams($io, $expectedParams, $actualParams, $docRoot);
     }
 
-    private static function getEnvValues( array $envMap )
+    private static function getEnvValues(array $envMap)
     {
         $params = array();
         foreach ($envMap as $param => $env) {
@@ -169,7 +154,7 @@ class ScriptHandler
         return $params;
     }
 
-    private static function processRenamedValues( array $renameMap, array $actualParams )
+    private static function processRenamedValues(array $renameMap, array $actualParams)
     {
         foreach ($renameMap as $param => $oldParam) {
             if (array_key_exists($param, $actualParams)) {
@@ -186,12 +171,9 @@ class ScriptHandler
         return $actualParams;
     }
 
-    private static function getParams(
-        IOInterface $io,
-        array $expectedParams,
-        array $actualParams,
-        $docRoot = ''
-    ) {
+    private static function getParams(IOInterface $io, array $expectedParams, array $actualParams,
+                                      $docRoot = '')
+    {
         $isStarted = false;
         foreach ($expectedParams as $sectionName => $sectionValues) {
             foreach ($sectionValues as $key => $message) {
@@ -210,24 +192,15 @@ class ScriptHandler
                     $default = str_replace('[[DOCROOT]]', $docRoot, $default);
                 }
 
-                if ($io->isInteractive()) {
-
-
-                    $value = $io->ask(
-                                sprintf(
-                                    '<question>%s / %s</question> (<comment>%s</comment>):',
-                                    $sectionName,
-                                    $key,
-                                    $default
-                                ),
-                                    $default
-                    );
+                if($io->isInteractive()){
+                    $value = $io
+                        ->ask(sprintf('<question>%s / %s</question> (<comment>%s</comment>):', $sectionName, $key,
+                                $default), $default);
 
                     $actualParams[$sectionName][$key] = Inline::parse($value);
-                } else {
+                }else{
                     $actualParams[$sectionName][$key] = $default;
                 }
-
             }
         }
 
