@@ -174,6 +174,17 @@ class ScriptHandler
     private static function getParams(IOInterface $io, array $expectedParams, array $actualParams,
                                       $docRoot = '')
     {
+        array_walk_recursive($myArray, function(&$value, $key, $docRoot){
+            if (strpos($value, '[[DOCROOT]]') !== false) {
+                $value = str_replace('[[DOCROOT]]', $docRoot, $value);
+            }
+        }, $docRoot);
+
+        // Simply use the expectedParams value as default for the missing params.
+        if (!$io->isInteractive()) {
+            return array_replace($expectedParams, $actualParams);
+        }
+
         $isStarted = false;
         foreach ($expectedParams as $sectionName => $sectionValues) {
             foreach ($sectionValues as $key => $message) {
@@ -188,19 +199,11 @@ class ScriptHandler
 
                 $default = Inline::dump($message);
 
-                if (strpos($default, '[[DOCROOT]]') !== false) {
-                    $default = str_replace('[[DOCROOT]]', $docRoot, $default);
-                }
+                $value = $io
+                    ->ask(sprintf('<question>%s / %s</question> (<comment>%s</comment>):', $sectionName, $key,
+                        $default), $default);
 
-                if($io->isInteractive()){
-                    $value = $io
-                        ->ask(sprintf('<question>%s / %s</question> (<comment>%s</comment>):', $sectionName, $key,
-                                $default), $default);
-
-                    $actualParams[$sectionName][$key] = Inline::parse($value);
-                }else{
-                    $actualParams[$sectionName][$key] = $default;
-                }
+                $actualParams[$sectionName][$key] = Inline::parse($value);
             }
         }
 
