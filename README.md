@@ -169,3 +169,7 @@ configurations inside it instead of a configuration object:
     }
 }
 ```
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/philwc/parameterhandler/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
